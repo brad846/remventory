@@ -84,18 +84,23 @@ export default function App() {
   const editFileRef = useRef();
   const checkInputRef = useRef();
 
-  const loadSlabs = useCallback(async () => {
+const loadSlabs = useCallback(async (attempt = 1) => {
     const { data, error } = await supabase
       .from("slabs")
       .select("*")
       .order("created_at", { ascending: false });
     if (error) {
       console.error("Load error:", error);
-      showToast("Failed to load inventory.", "error");
+      if (attempt < 3) {
+        setTimeout(() => loadSlabs(attempt + 1), 2000);
+      } else {
+        showToast("Failed to load inventory.", "error");
+        setLoaded(true);
+      }
     } else {
       setSlabs((data || []).map(rowToSlab));
+      setLoaded(true);
     }
-    setLoaded(true);
   }, []);
 
   useEffect(() => { loadSlabs(); }, [loadSlabs]);
